@@ -1,0 +1,6 @@
+@@@ ruby @@@
+@i=10;
+@1.upto(i) { |x|
+hello with number @{x}
+hello without a number
+@}

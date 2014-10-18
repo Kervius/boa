@@ -1,0 +1,7 @@
+=== perl ===
+=use strict; use warnings;
+=my $i=10;
+=for (1 .. $i) {
+hello with number ={$_}
+hello without a number
+=}

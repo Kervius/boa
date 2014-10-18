@@ -1,0 +1,10 @@
+@@@ shell @@@
+@I=3
+@for X in `seq 1 $I`; do
+hello with number @{$X} in the middle
+hello with number on the end @{$X}
+@{$X} hello with the number in the beginning
+hello without a number
+@done
+hello with escaping test <@@{$X}>
+@@ hello with escaping test <@@{$X}>
