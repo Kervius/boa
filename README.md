@@ -8,6 +8,8 @@ The concept
 
 Instead of inventing a new preprocessor language, `boa` allows to use a scripting language for your preprocessing needs. The input file, using the simple rules, is converted on the fly into a script text and is fed to the interpreter. Output of the interpreter is the result of the preprocessing.
 
+Explanation for the initiated. Well, that's pretty much what the PHP does with the HTML, but coded in about 500 lines of code,  without the galore of dependecies and with the choice of a better language. Example below uses the shell, but the same sh@t work for Perl and Ruby. Just replace the shell code with the Perl/Ruby one, replace the `shell` with the `perl` or `ruby` - and you are good to go.
+
 See "Limitations" below.
 
 Usage
