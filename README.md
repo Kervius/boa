@@ -119,3 +119,8 @@ boa.pl
 ------
 
 A functional, proof-of-concept `boa` implementation in Perl. It only lacks few featured which were implemented later (e.g. escaping special character).
+
+TODO
+----
+[ ] Add chdir into the directory where the input file is located. Or not?
+[ ] Add `-C <dir>` command line option to perform chdir() before processing.
