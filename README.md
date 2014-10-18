@@ -10,6 +10,16 @@ Instead of inventing a new preprocessor language, `boa` allows to use a scriptin
 
 See "Limitations" below.
 
+Usage
+-----
+
+    usage: boa [-l lang] [-Q @] [-d] [-o output-file] <input-file>
+    
+- `-l` set the language for the input. The default is the `shell`/`/bin/sh`
+- `-Q` allows to change the special character. The default is `@`.
+- `-d` - dump/debug mode. The script is sent to file/stdout instead of the interpreter.
+- `-o` allows to specify the output file. If not specified, the output is sent to stdout.
+
 Example
 -------
 
