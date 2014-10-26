@@ -1,0 +1,15 @@
+@@@ perl @@@
+@{{
+sub str_starts_with
+{
+	my ($a, $b) = @_;
+	print qq/test "x\${$a#\$$b}" != "x\${$a}"/;
+};
+}}@
+
+A="hello"
+B="hell"
+
+if @{!str_starts_with('A','B');}; then
+	echo "$A starts with $B"
+fi

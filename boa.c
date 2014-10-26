@@ -590,7 +590,13 @@ int main( int argc, char **argv )
 						/* print from `tmp` to `p` as code */
 						tmp += strlen( qch );
 						tmp += 1;
-						fprintf( output, "%s%.*s%s", l->print_s, (int)(p-tmp), tmp, l->print_e );
+						if (*tmp != '!') {
+							fprintf( output, "%s%.*s%s", l->print_s, (int)(p-tmp), tmp, l->print_e );
+						}
+						else {
+							tmp++;
+							fprintf( output, "%.*s\n", (int)(p-tmp), tmp );
+						}
 						tmp = p + 1;
 					}
 					assert( c-- > 0 );
