@@ -46,6 +46,7 @@ struct lang_def {
 
 char *shell_quote(char *str, size_t ilen, size_t *len);
 char *perl_quote(char *str, size_t ilen, size_t *len);
+char *lua_quote(char *str, size_t ilen, size_t *len);
 char *c_quote(char *str, size_t ilen, size_t *len);
 struct lang_def lang_conf[] = {
 	{
@@ -95,6 +96,16 @@ struct lang_def lang_conf[] = {
 		.quote = perl_quote,
 		.print_s = "print ",
 		.print_e = ";\n",
+		.preamble = "",
+		.closure = "",
+	},
+	{
+		.name = "lua",
+		.intrp = { "/usr/bin/env", "lua", "lua" },
+		.print_nl = "io.output():write('\\n')\n",
+		.quote = lua_quote,
+		.print_s = "io.output():write(",
+		.print_e = ")\n",
 		.preamble = "",
 		.closure = "",
 	},
@@ -214,11 +225,13 @@ char *fcb( char *str, char op, char cl )
 	return NULL;
 }
 
-void check_capacity( char **buf, size_t *cap, size_t offs )
+static void check_capacity( char **buf, size_t *cap, size_t offs, char **curp, size_t curi )
 {
 	if (*cap < offs) {
 		*cap = offs < 128 ? 256 : (*cap)*2;
 		*buf = realloc( *buf, *cap );
+		if (curp)
+			*curp = *buf + curi;
 	}
 }
 
@@ -230,7 +243,7 @@ char *shell_quote(char *str, size_t ilen, size_t *len)
 	const char Q = '\'';
 	const char E = '\\';
 
-	check_capacity( &buf, &buf_cap, ilen );
+	check_capacity( &buf, &buf_cap, ilen, 0, 0 );
 	if (len) *len = 0;
 
 	if (buf) {
@@ -238,7 +251,7 @@ char *shell_quote(char *str, size_t ilen, size_t *len)
 		char *p = buf;
 		p[i++] = Q;
 		while (ilen > 0) {
-			check_capacity( &buf, &buf_cap, i+8 );
+			check_capacity( &buf, &buf_cap, i+8, &p, i );
 			if (!buf) return buf;
 			if (*str != Q) {
 				p[i++] = *str;
@@ -267,7 +280,7 @@ char *perl_quote(char *str, size_t ilen, size_t *len)
 	const char Q = '\'';
 	const char E = '\\';
 
-	check_capacity( &buf, &buf_cap, ilen );
+	check_capacity( &buf, &buf_cap, ilen, 0, 0 );
 	if (len) *len = 0;
 
 	if (buf) {
@@ -275,7 +288,7 @@ char *perl_quote(char *str, size_t ilen, size_t *len)
 		char *p = buf;
 		p[i++] = Q;
 		while (ilen > 0) {
-			check_capacity( &buf, &buf_cap, i+8 );
+			check_capacity( &buf, &buf_cap, i+8, &p, i );
 			if (!buf) return buf;
 			if (*str == Q) {
 				p[i++] = E;
@@ -303,11 +316,10 @@ char *c_quote(char *str, size_t ilen, size_t *len)
 {
 	static char *buf = NULL;
 	static size_t buf_cap = 0;
-	const char Q = '\'';
 	const char DQ = '"';
 	const char E = '\\';
 
-	check_capacity( &buf, &buf_cap, ilen );
+	check_capacity( &buf, &buf_cap, ilen, 0, 0 );
 	if (len) *len = 0;
 
 	if (buf) {
@@ -315,11 +327,50 @@ char *c_quote(char *str, size_t ilen, size_t *len)
 		char *p = buf;
 		p[i++] = DQ;
 		while (ilen > 0) {
-			check_capacity( &buf, &buf_cap, i+8 );
+			check_capacity( &buf, &buf_cap, i+8, &p, i );
 			if (!buf) return buf;
 			if (*str == DQ) {
 				p[i++] = E;
 				p[i++] = DQ;
+			}
+			else if (*str == E) {
+				p[i++] = E;
+				p[i++] = E;
+			}
+			else {
+				p[i++] = *str;
+			}
+			str++;
+			ilen--;
+		}
+		p[i++] = DQ;
+		p[i] = 0;
+		if (len) *len = i;
+	}
+	return buf;
+}
+
+/* lua style string quoting: in single quotes, single quote and back slash need escaping */
+char *lua_quote(char *str, size_t ilen, size_t *len)
+{
+	static char *buf = NULL;
+	static size_t buf_cap = 0;
+	const char Q = '\'';
+	const char E = '\\';
+
+	check_capacity( &buf, &buf_cap, ilen, 0, 0 );
+	if (len) *len = 0;
+
+	if (buf) {
+		size_t i = 0;
+		char *p = buf;
+		p[i++] = Q;
+		while (ilen > 0) {
+			check_capacity( &buf, &buf_cap, i+8, &p, 0 );
+			if (!buf) return buf;
+			if (*str == Q) {
+				p[i++] = E;
+				p[i++] = Q;
 			}
 			else if (*str == E) {
 				p[i++] = E;

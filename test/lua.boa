@@ -1,0 +1,6 @@
+@@@ lua @@@
+@i=10
+@for x = 1, i do
+hello with number @{x}
+hello without a number
+@end
