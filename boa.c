@@ -31,6 +31,8 @@
 #define DEF_OBR2  DEF_OBR_ DEF_OBR_
 #define DEF_CBR2  DEF_CBR_ DEF_CBR_
 
+#define BOA_VERSION "0.1"
+#define BOA_USAGE "usage: boa [-v] [-h] [-l lang] [-Q " DEF_QCH "] [-d] [-o output-file] <input-file>\n"
 
 typedef char *(*quote_func_t)(char *, size_t, size_t *);
 struct lang_def {
@@ -109,13 +111,13 @@ struct lang_def lang_conf[] = {
 		.preamble = "",
 		.closure = "",
 	},
-#if 1 && 0  /* just for fun */
+#if 1 && 0  /* just for fun; not tested */
 	{
 		.name = "c",
 		.intrp = { "/usr/bin/env", "tcc", "tcc", "-run", "-", },
 		.print_nl = "putchar('\\n');\n",
 		.quote = c_quote,
-		.print_s = "puts(",
+		.print_s = "printf( \"%s\", ",
 		.print_e = ");\n",
 		.preamble = "#include <stdio.h>\n" "int main() {\n",
 		.closure = "return 0;\n" "}\n" ,
@@ -173,9 +175,9 @@ int magic( char *str, size_t len, char **lang, char **qch )
 {
 	char ch;
 	int l = 0;
-	// magic example: %%% bozo %%%
-	// qch -> "%"
-	// lang -> "bozo"
+	/* magic example: %%% bozo %%%
+	 * qch -> "%"
+	 * lang -> "bozo" */
 	if (len > 8) {
 		ch = str[0];
 		if (!isspace(ch) && ch == str[1] && ch == str[2] && isspace(str[3])) {
@@ -389,7 +391,7 @@ char *lua_quote(char *str, size_t ilen, size_t *len)
 	return buf;
 }
 
-int streq( const char *str1, const char *str2 )
+static int streq( const char *str1, const char *str2 )
 {
 	return strcmp(str1,str2) == 0;
 }
@@ -516,7 +518,7 @@ int main( int argc, char **argv )
 	ssize_t line_len;
 	int state = 0;
 
-	while ((opt = getopt(argc, argv, "dl:Q:o:")) != -1) {
+	while ((opt = getopt(argc, argv, "vhdl:Q:o:")) != -1) {
 		switch (opt) {
 			case 'd':
 				dump_only = 1;
@@ -531,9 +533,13 @@ int main( int argc, char **argv )
 			case 'Q':
 				qch = optarg;
 				break;
+			case 'v':
+				puts( "boa v" BOA_VERSION );
+				exit(0);
+			case 'h':
 			default:
-				fprintf( stderr, "usage: boa [-l lang] [-Q " DEF_QCH "] [-d] [-o output-file] <input-file>\n" );
-				exit(1);
+				fprintf( stderr, BOA_USAGE );
+				exit(opt == 'h' ? 0 : 1);
 		}
 	}
 
@@ -549,6 +555,7 @@ int main( int argc, char **argv )
 	if (optind >= argc) {
 		fprintf( stderr, "reading from the stdin\n" );
 		input = stdin;
+		setenv( "BOA_INPUT", "-", 1 );
 	}
 	else {
 		input = fopen( argv[optind], "r" );
@@ -557,6 +564,7 @@ int main( int argc, char **argv )
 			exit(1);
 		}
 		cloexec( input );
+		setenv( "BOA_INPUT", argv[optind], 1 );
 	}
 
 	/* output file */
@@ -609,7 +617,7 @@ int main( int argc, char **argv )
 			}
 			else {
 				/* simple text, but probably with the expansions */
-				int c = 100;
+				//int c = 100;
 				tmp = line;
 
 				while (tmp < line + line_len) {
@@ -641,16 +649,18 @@ int main( int argc, char **argv )
 						/* print from `tmp` to `p` as code */
 						tmp += strlen( qch );
 						tmp += 1;
-						if (*tmp != '!') {
-							fprintf( output, "%s%.*s%s", l->print_s, (int)(p-tmp), tmp, l->print_e );
-						}
-						else {
+						if (*tmp == '!') {
+							/* simply execute, do not print */
 							tmp++;
 							fprintf( output, "%.*s\n", (int)(p-tmp), tmp );
 						}
+						else {
+							/* print the code */
+							fprintf( output, "%s%.*s%s", l->print_s, (int)(p-tmp), tmp, l->print_e );
+						}
 						tmp = p + 1;
 					}
-					assert( c-- > 0 );
+					//assert( c-- > 0 );
 				}
 				fprintf( output, "%s", l->print_nl );
 			}
@@ -667,7 +677,7 @@ int main( int argc, char **argv )
 	}
 	free(line);
 
-	if (!output) {
+	if (!output) { /* empty input */
 		output = create_output( dump_only, out_file_name, l->intrp, &child_pid );
 		if (!output)
 			return 1;
@@ -688,6 +698,9 @@ int main( int argc, char **argv )
 		if (ret != child_pid) {
 			fprintf( stderr, "something went wrong: waitpid(%d) = %d, st=%d\n", child_pid, ret, status );
 			return 1;
+		}
+		if (status) {
+			fprintf( stderr, "interpreter for %s failed! rc=%d\n", l->name, WEXITSTATUS(status) );
 		}
 	}
 

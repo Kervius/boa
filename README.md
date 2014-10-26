@@ -1,14 +1,14 @@
 boa
 ===
 
-`boa` - a simple generic preprocessor for *NIX systems, written in C.
+`boa` - a simple generic preprocessor for UNIX systems, written in C.
 
 The concept
 -----------
 
 Instead of inventing a new preprocessor language, `boa` allows to use a scripting language for your preprocessing needs. The input file, using the simple rules, is converted on the fly into a script text and is fed to the interpreter. Output of the interpreter is the result of the preprocessing.
 
-Explanation for the initiated. Well, that's pretty much what the PHP does with the HTML, but coded in about 500 lines of code,  without the galore of dependecies and with the choice of a better language. Example below uses the shell, but the same sh@t work for Perl and Ruby. Just replace the shell code with the Perl/Ruby one, replace the `shell` with the `perl` or `ruby` - and you are good to go.
+Explanation for the initiated. Well, that's pretty much what the PHP does with the HTML, but coded in about 500 lines of code,  without the galore of dependecies and with the choice of a better language. Example below uses the shell, but the same sh@t work for Perl, Lua and Ruby. Just replace the shell code with the Perl/Ruby/Lua one, replace the `shell` with the `perl` or `lua` or `ruby` - and you are good to go.
 
 See "Limitations" below.
 
@@ -65,13 +65,7 @@ The last invocation is actually what is happening inside the `boa` when called w
 The preprocessor language
 -------------------------
 
-- Default special character is `@`. 
-- Line starting with the `@` is a script line. Script lines are sent verbatim to the interpreter.
-- Line starting with the `@{{` is the beginning of the script block. Script blocks are sent verbatim to the interpreter until line starting with `}}@` is encountered.
-- Any other line is a text line. Text line is converted into a print statement of the currently selected language, escaping the text as to make sure it would be printed verbatim. The text line may contain `@{statement}` shortcut elements which would be expanded into the statements printing value of the statement.
-- To escape the `@` character in the text line, it has to be repeated twice. E.g. a line `@@` would produce a statement printing single `@`.
-- A line starting with `@@` is treated as a text line, with the `@` being escaped.
-- First line of the file may be a magic line. Magic line has prefix and suffix which are a sequence of three matching characters. Enclosed within is the name of the back-end language to use. E.g. `@@@ perl @@@` sets the language to `perl`. The character which is used for suffix and prefix replaces the default special character. E.g. `%%% ruby %%%` sets language to `ruby` and special character to `%`.
+[See Wiki](https://github.com/Kervius/boa/wiki/LangDef)
 
 Currently supported interpreters
 --------------------------------
@@ -79,6 +73,7 @@ Currently supported interpreters
 - `shell` and `bash` (/bin/sh and /bin/bash)
 - `perl`
 - `ruby`
+- `lua`
 - `dummy` (simply runs the `cat` instead of the real script language interpreter; used for testing; in normal usage is equivalent to `-d` option)
 
 Adding a new language 
@@ -122,5 +117,5 @@ A functional, proof-of-concept `boa` implementation in Perl. It only lacks few f
 
 TODO
 ----
-[ ] Add chdir into the directory where the input file is located. Or not?
-[ ] Add `-C <dir>` command line option to perform chdir() before processing.
+- [ ] Add chdir into the directory where the input file is located. Or not?
+- [ ] Add `-C <dir>` command line option to perform chdir() before processing.
